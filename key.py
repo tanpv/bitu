@@ -32,21 +32,43 @@
 
 import os
 import binascii
+import ecdsa
+import hashlib
 
 
-class Key():
+class Key(object):
 
-	"""
-		support 2 case:
-			- if user specify private_key --> create key with this private key
-			- if user not specify private_key --> auto create a random 32 bytes number for private key
-	"""
 	def __init__(self, private_key=None):
 		if private_key == None:
+			# create a 32 bytes random number
 			self.private_key = os.urandom(32)
 			# convert from byte stream to readable format
 			self.private_key_readable = binascii.hexlify(self.private_key)
 		else:
 			self.private_key_readable = private_key
 			self.private_key = binascii.unhexlify(private_key.encode('ascii'))
+
+		self.sk = ecdsa.SigningKey.from_string(self.private_key, curve=ecdsa.SECP256k1)
+		self.vk = self.sk.verifying_key
+		self.public_key = b'04' + binascii.hexlify(self.vk.to_string())
+
+		ripemd160 = hashlib.new('ripemd160')
+		ripemd160.update(hashlib.sha256(binascii.unhexlify(self.public_key)).digest())
+		
+		self.hashed_public_key = b'00' + binascii.hexlify(ripemd160.digest())
+		self.check_sum = self.calculate_check_sum(self.hashed_public_key)
+
+	
+
+	def calculate_check_sum(self, hashed_public_key):
+		return binascii.hexlify(self.double_sha256(binascii.unhexlify(hashed_public_key))[:4])
+
+	def double_sha256(self, message):
+		return hashlib.sha256(hashlib.sha256(message).digest()).digest()
+
+
+
+k = Key()
+print(k.public_key)
+print(k.hashed_public_key)
 
