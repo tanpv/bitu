@@ -53,15 +53,15 @@ class Key(object):
 
 		if private_key == None:
 			private_key_byte= os.urandom(32)
-			self.private_key = self.convert_private_key_from_byte_to_wif_format(private_key_byte, testnet)
+			self.private_key = self.private_key_from_byte_to_wif_format(private_key_byte, testnet)
 		else:
 			self.private_key = private_key
 			private_key_byte = binascii.unhexlify(private_key.encode('ascii'))
 
-		self.address = self.from_private_key_to_address(private_key_byte, testnet)
+		self.address = self.private_key_to_address(private_key_byte, testnet)
 
 
-	def from_private_key_to_address(self, private_key_byte, testnet):
+	def private_key_to_address(self, private_key_byte, testnet):
 
 		sk = ecdsa.SigningKey.from_string(private_key_byte, curve=ecdsa.SECP256k1)
 		vk = sk.verifying_key
@@ -85,8 +85,7 @@ class Key(object):
 		return address
 
 
-
-	def convert_private_key_from_byte_to_wif_format(self, private_key_byte, testnet):
+	def private_key_from_byte_to_wif_format(self, private_key_byte, testnet):
 
 		private_key_hex = binascii.hexlify(private_key_byte)
 
@@ -102,10 +101,24 @@ class Key(object):
 		return private_key
 
 
-k1 = Key()
+k1 = Key(testnet=True)
 print(k1.private_key)
 print(k1.address)
 
-k2 = Key(testnet=False)
-print(k2.private_key)
-print(k2.address)
+# bob
+# b'92ASXhnGAbAi9FYP3k8Ru6jLKAY2VyxYf3vKzLJ4bPfGA6B5eFm'
+# b'mg8Y9jaVt6HJpy4pvKFJ1z3KZWbaR3BDFf'
+
+# alice
+# b'93TGfBvCX8oW9e7UQLiXAmb2QHLXNsEz6bBVcwhAU4LtjY1vFom'
+# b'n268kLx7MuuoqbuX4VRDZvvGhgVuFJvChP'
+
+# sara
+# b'92C97ce7tUW54ev7Zsu5wd2DvF8w5wf6vpoGmvdx9R3ULtTHXWM'
+# b'mgfxna24EgTji21eXuYegAqju3xuLBcuNK'
+
+
+
+# k2 = Key(testnet=False)
+# print(k2.private_key)
+# print(k2.address)
